@@ -1,101 +1,290 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated } from '../utils/auth';
+import { getAllTasks, createTask, updateTask, deleteTask, Task } from './services/TaskService';
+import { logout } from './services/AuthService';
+
+export default function HomePage() {
+  const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [formValues, setFormValues] = useState<{ title: string; description: string; dueDate: string; statusId: number }>({
+    title: '',
+    description: '',
+    dueDate: '',
+    statusId: 1,
+  });
+  const [currentTaskId, setCurrentTaskId] = useState<number | null>(null); // Para identificar la tarea actual
+
+  const statusMap: { [key: number]: string } = {
+    1: "Pendiente",
+    2: "En Progreso",
+    3: "Completada"
+  };
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!isAuthenticated()) {
+        router.push('/auth');
+        return;
+      }
+
+      try {
+        const tasksData = await getAllTasks();
+        setTasks(tasksData);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+        setError("Failed to load tasks. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [router]);
+
+  const handleCreateTask = () => {
+    setModalOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setCurrentTaskId(task.id);
+    setFormValues({
+      title: task.title,
+      description: task.description ?? '', // Usa una cadena vacía si description es undefined
+      dueDate: task.dueDate.split('T')[0],
+      statusId: task.statusId,
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormValues({ ...formValues, [name]: value });
+  };
+
+  const handleOk = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const taskData = {
+      title: formValues.title,
+      description: formValues.description,
+      statusId: 1,
+      dueDate: new Date(formValues.dueDate).toISOString()
+    };
+
+    try {
+      const newTask = await createTask(taskData);
+      console.log('Tarea creada:', newTask);
+      setTasks(prevTasks => [...prevTasks, newTask]);
+      setModalOpen(false);
+      setFormValues({ title: '', description: '', dueDate: '', statusId: 1 }); // Resetear el formulario
+    } catch (error) {
+      console.error("Error creando la tarea:", error);
+    }
+  };
+
+  const handleEditOk = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedTaskData = {
+      ...formValues,
+      dueDate: new Date(formValues.dueDate).toISOString()
+    };
+
+    try {
+      if (currentTaskId) {
+        const updatedTask = await updateTask(currentTaskId, updatedTaskData);
+        setTasks(prevTasks => prevTasks.map(task => (task.id === currentTaskId ? updatedTask : task)));
+        setEditModalOpen(false);
+        setFormValues({ title: '', description: '', dueDate: '', statusId: 1 });
+      }
+    } catch (error) {
+      console.error("Error actualizando la tarea:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await deleteTask(taskId);
+      setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      setEditModalOpen(false);
+    } catch (error) {
+      console.error("Error borrando la tarea:", error);
+    }
+  };
+
+  const handleCancel = () => {
+    setModalOpen(false);
+    setEditModalOpen(false);
+  };
+
+  if (loading) {
+    return <div>Cargando...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <section className='main'>
+      <div className="board-header">
+        <div className="header_logo">
+          <h1>To-Do</h1>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="user-menu">
+          <a href="/login" onClick={handleLogout}>Cerrar sesión</a>
+        </div>
+      </div>
+      <div className='content'>
+        <div className="task-list">
+          <h2>Todas mis Tareas</h2>
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="task"
+              onClick={() => handleEditTask(task)}
+            >
+              <span>{task.title}</span>
+              <span className={`status ${task.statusId}`}>
+                {statusMap[task.statusId as number]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="board">
+          {Object.values(statusMap).map((status) => (
+            <div key={status} className="list">
+              <h2>{status}</h2>
+              <div className="cards">
+                {tasks
+                  .filter((task) => statusMap[task.statusId as number] === status) // Accede a `statusMap` usando `as number`
+                  .map((task) => (
+                    <div
+                      key={task.id}
+                      className="task"
+                      onClick={() => handleEditTask(task)}
+                    >
+                      <span>{task.title}</span>
+                      <span className={`status ${task.statusId}`}>
+                        {statusMap[task.statusId as number]}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <button onClick={handleCreateTask} className="create-task-button">
+          Crear Tarea
+        </button>
+      </div>
+
+      {modalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={handleCancel}>&times;</span>
+            <h2>Crear Tarea</h2>
+            <form onSubmit={handleOk}>
+              <label>
+                Título:
+                <input
+                  type="text"
+                  name="title"
+                  value={formValues.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <label>
+                Descripción:
+                <textarea
+                  name="description"
+                  value={formValues.description}
+                  onChange={handleInputChange}
+                />
+              </label>
+              <label>
+                Fecha de Vencimiento:
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formValues.dueDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <button type="submit">Crear</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <span className="close" onClick={handleCancel}>&times;</span>
+            <h2>Editar Tarea</h2>
+            <form onSubmit={handleEditOk}>
+              <label>
+                Título:
+                <input
+                  type="text"
+                  name="title"
+                  value={formValues.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <label>
+                Descripción:
+                <textarea
+                  name="description"
+                  value={formValues.description}
+                  onChange={handleInputChange}
+                />
+              </label>
+              <label>
+                Fecha de Vencimiento:
+                <input
+                  type="date"
+                  name="dueDate"
+                  value={formValues.dueDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </label>
+              <label>
+                Estado:
+                <select
+                  name="statusId"
+                  value={formValues.statusId}
+                  onChange={handleInputChange}
+                >
+                  {Object.entries(statusMap).map(([key, status]) => (
+                    <option key={key} value={key}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="submit">Actualizar</button>
+              <button className="delete-button" type="button" onClick={() => handleDeleteTask(currentTaskId!)}>Borrar</button>
+            </form>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
