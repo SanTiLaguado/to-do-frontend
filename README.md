@@ -19,7 +19,7 @@ npm install
 Una vez completada la instalación de las dependencias ejecuta:
 
 ```
-npm run start:dev
+npm run dev
 ```
 
 Esto ejecutará el proyecto en modo de desarrollo.
