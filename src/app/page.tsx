@@ -141,7 +141,7 @@ export default function HomePage() {
           <h1>To-Do</h1>
         </div>
         <div className="user-menu">
-          <a href="/login" onClick={handleLogout}>Cerrar sesión</a>
+          <a href="/auth" onClick={handleLogout}>Cerrar sesión</a>
         </div>
       </div>
       <div className='content'>
