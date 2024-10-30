@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# To-Do App (FrontEnd)
 
-## Getting Started
+Esta es una aplicación web para gestionar tareas, desarrollada con Next.js, TypeScript y CSS. Proporciona una interfaz de usuario intuitiva para gestionar tareas, incluyendo funcionalidades de autenticación y edición en tiempo real.
 
-First, run the development server:
+### Requisitos Previos
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Node.js** (versión recomendada: 16.x o superior)
+
+### Dependencias
+
+Para instalar las dependencias del proyecto:
+
+```
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Ejecución del Proyecto
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Una vez completada la instalación de las dependencias ejecuta:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+npm run start:dev
+```
 
-## Learn More
+Esto ejecutará el proyecto en modo de desarrollo.
 
-To learn more about Next.js, take a look at the following resources:
+La Aplicacion web estará disponible en `http://localhost:3001/` por default.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Interfaz de Usuario
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Diseñada con un enfoque en la simplicidad y la accesibilidad, esta aplicación utiliza CSS nativo para una experiencia visual limpia y sin distracciones. La navegación y edición de tareas es rápida y directa.
 
-## Deploy on Vercel
+### Gestión de Tareas
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Lista de tareas**: Muestra todas las tareas del usuario en un solo listado, con el título de cada tarea y su estado actual. Cada tarea es un elemento clicable que abre un modal de edición.
+- **Tablero de tareas**: Organizado en columnas para cada estado de tarea (Pendiente, En Progreso, Completada). Cada columna tiene:
+  - **Encabezado de estado**: Muestra el nombre del estado ("Pendiente," "En Progreso," "Completada").
+  - **Tarjetas de tareas**: Las tareas filtradas según el estado correspondiente. Cada tarjeta contiene el título de la tarea y su estado, y al hacer clic en ella, se abre el modal de edición.
+- **Botón Crear Tarea**: Ubicado en la parte inferior de la lista de tareas y el tablero, permite al usuario abrir un modal para crear una nueva tarea.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+##### Modal de Creación y Edición de Tareas
+
+- **Modal de Creación**: Aparece al hacer clic en "Crear Tarea," permitiendo ingresar un título, descripción y fecha de vencimiento para una nueva tarea.
+- **Modal de Edición**: Aparece al hacer clic en una tarea existente y permite actualizar su título, descripción, fecha de vencimiento, y estado. Incluye un botón adicional de "Borrar" para eliminar la tarea.
+
+
+
+Este proyecto ha sido desarrollado con un enfoque en la experiencia de usuario y es el resultado de un desarrollo ágil en un plazo de 24 horas, manteniendo un diseño sencillo y funcional.
+
+#### 
