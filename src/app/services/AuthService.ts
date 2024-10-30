@@ -32,12 +32,12 @@ export const login = async (email: string, password: string): Promise<{ token: s
 };
 
 export const register = async (
-  nombre: string,
+  name: string,
   email: string,
   password: string
 ): Promise<void> => {
   try {
-    await axios.post(API_REGISTER_URL, { email, password, nombre });
+    await axios.post(API_REGISTER_URL, { name, email, password  });
     
     if (typeof window !== "undefined") {
       localStorage.removeItem('token');
